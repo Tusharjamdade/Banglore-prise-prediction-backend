@@ -21,14 +21,20 @@ def load_saved_artifacts():
     global __model
 
     try:
-        # Get absolute path (Handle Render File Path Issues)
-        artifact_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "artifacts")
-        print(f"🔍 Checking artifacts path: {artifact_path}")
+        # Absolute Path to Artifacts Directory
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        artifact_path = os.path.join(base_dir, "artifacts")
 
-        # Load column names
+        print(f"🔍 Checking artifacts folder: {artifact_path}")
+
+        # Ensure artifacts directory exists
+        if not os.path.exists(artifact_path):
+            raise FileNotFoundError(f"❌ Artifacts folder missing: {artifact_path}")
+
+        # Load columns.json
         columns_file = os.path.join(artifact_path, "columns.json")
         if not os.path.exists(columns_file):
-            raise FileNotFoundError(f"❌ columns.json not found at {columns_file}")
+            raise FileNotFoundError(f"❌ Missing columns.json at {columns_file}")
 
         print(f"📂 Loading columns from: {columns_file}")
         with open(columns_file, "r") as f:
@@ -43,7 +49,7 @@ def load_saved_artifacts():
         # Load trained model
         model_file = os.path.join(artifact_path, "banglore_home_prices_model.pickle")
         if not os.path.exists(model_file):
-            raise FileNotFoundError(f"❌ Model file not found at {model_file}")
+            raise FileNotFoundError(f"❌ Missing model file at {model_file}")
 
         print(f"📂 Loading model from: {model_file}")
         with open(model_file, "rb") as f:
@@ -115,6 +121,7 @@ def get_estimated_price(location, sqft, bhk, bath):
 
 # Start Flask Server
 if __name__ == "__main__":
-    print("🚀 Starting Flask Server for Home Price Prediction...")
-    load_saved_artifacts()  # Load model and columns
-    app.run(host="0.0.0.0", port=5000, debug=True)  # Run Flask app
+    port = int(os.environ.get("PORT", 5000))  # Use Render's assigned port
+    print(f"🚀 Starting server on port {port}...")
+    load_saved_artifacts()  # Load model before starting
+    app.run(host="0.0.0.0", port=port, debug=True)
