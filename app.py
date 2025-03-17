@@ -14,45 +14,26 @@ __locations = None
 __data_columns = None
 __model = None
 
+# Load Artifacts (Model + Columns)
 def load_saved_artifacts():
-    """Loads ML model and column names from artifacts folder"""
+    """Loads ML model and column names from the same directory"""
     global __data_columns
     global __locations
     global __model
 
     try:
-        # Absolute Path to Artifacts Directory
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        artifact_path = os.path.join(base_dir, "artifacts")
-
-        print(f"🔍 Checking artifacts folder: {artifact_path}")
-
-        # Ensure artifacts directory exists
-        if not os.path.exists(artifact_path):
-            raise FileNotFoundError(f"❌ Artifacts folder missing: {artifact_path}")
-
-        # Load columns.json
-        columns_file = os.path.join(artifact_path, "columns.json")
-        if not os.path.exists(columns_file):
-            raise FileNotFoundError(f"❌ Missing columns.json at {columns_file}")
-
-        print(f"📂 Loading columns from: {columns_file}")
-        with open(columns_file, "r") as f:
+        # Load column names
+        with open("columns.json", "r") as f:
             data = json.load(f)
             if "data_columns" not in data:
-                raise ValueError("❌ columns.json does not contain 'data_columns' key")
+                raise ValueError("❌ 'data_columns' key missing in columns.json")
 
             __data_columns = data["data_columns"]
             __locations = __data_columns[3:]  # First 3 columns are sqft, bath, bhk
             print(f"✅ Loaded columns: {__data_columns}")
 
         # Load trained model
-        model_file = os.path.join(artifact_path, "banglore_home_prices_model.pickle")
-        if not os.path.exists(model_file):
-            raise FileNotFoundError(f"❌ Missing model file at {model_file}")
-
-        print(f"📂 Loading model from: {model_file}")
-        with open(model_file, "rb") as f:
+        with open("banglore_home_prices_model.pickle", "rb") as f:
             __model = pickle.load(f)
             print("✅ Model loaded successfully!")
 
@@ -121,7 +102,7 @@ def get_estimated_price(location, sqft, bhk, bath):
 
 # Start Flask Server
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Use Render's assigned port
+    port = int(os.environ.get("PORT", 5000))  # Render assigns a port dynamically
     print(f"🚀 Starting server on port {port}...")
-    load_saved_artifacts()  # Load model before starting
+    load_saved_artifacts()  # Load model and columns
     app.run(host="0.0.0.0", port=port, debug=True)
